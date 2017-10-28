@@ -4,7 +4,7 @@
 #define OK                  0
 #define BAD_LENGTH          1
 #define NOT_A_NUMBER        2
-#define NEGATIVE_NUMBER     3
+#define NEGATIVE_NUMBER     4
 
 struct Input {
 	int newBase;
