@@ -1,31 +1,30 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define OK                  0
-#define BAD_LENGTH          1
-#define NOT_A_NUMBER        2
-#define NEGATIVE_NUMBER     4
+#define NOT_A_NUMBER        1
 
-struct Input {
+struct Input
+{
 	int newBase;
 	int originalValue;
 };
 
-struct Output {
+struct Output
+{
 	int startIndex;
 	int result[6];
 };
 
-struct Input input;
-struct Output output;
+struct Input gInput;
+struct Output gOutput;
 
 int parseInteger(char *str, int length, int base, int *pResult)
 {
-	*pResult = 0;
+	/*we are assuming that the length of the number must be positive*/
 
-	if (length < 1) {
-		return BAD_LENGTH;
-	}
+	*pResult = 0;
 
 	int power = 1;
 
@@ -33,7 +32,7 @@ int parseInteger(char *str, int length, int base, int *pResult)
 
 	for (int i = 0; i < length; i++) {
 		int digit = *ptr - '0';
-		if ((digit < 0) || (digit > (base-1))) {
+		if ((digit < 0) || (digit > (base - 1))) {
 			return NOT_A_NUMBER;
 		}
 
@@ -51,10 +50,6 @@ int changeBase(int value, int base, int result[6], int *pStartIndex)
 		result[i] = 0;
 	}
 	*pStartIndex = 5;
-
-	if (value < 0) {
-		return NEGATIVE_NUMBER;
-	}
 
 	int smallestPowerAbove = 1;
 	int power = 0;
@@ -101,23 +96,17 @@ int getIntegerArgument(char *str, int base, int *pResult)
 
 	int error = parseInteger(str, length, base, pResult);
 
-	if (error == BAD_LENGTH) {
-		fprintf(stderr, "The length of the string must be positive\n");
-		return 1;
-	}
-
+	/*we are assuming that the length of the number must be positive*/
 	if (error == NOT_A_NUMBER) {
-		fprintf(stderr, "The string is not a decimal number\n");
-		return 1;
+		fprintf(stderr, "invalid!!\n");
+		return EXIT_FAILURE;
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int readInput(int argc, char *argv[])
 {
-	printf("%s was called with %d arguments\n", argv[0], argc - 1);
-
 	int originalBase = 0;
 
 	int error = getIntegerArgument(argv[1], 10, &originalBase);
@@ -125,12 +114,12 @@ int readInput(int argc, char *argv[])
 		return error;
 	}
 
-	error = getIntegerArgument(argv[2], 10, &input.newBase);
+	error = getIntegerArgument(argv[2], 10, &gInput.newBase);
 	if (error != 0) {
 		return error;
 	}
 
-	error = getIntegerArgument(argv[3], originalBase, &input.originalValue);
+	error = getIntegerArgument(argv[3], originalBase, &gInput.originalValue);
 	if (error != 0) {
 		return error;
 	}
@@ -149,8 +138,8 @@ void printOutput(int startIndex, int *result)
 
 int Test()
 {
-	input.newBase = 2;
-	input.originalValue = 63;
+	gInput.newBase = 2;
+	gInput.originalValue = 63;
 
 	struct Output expectedOutput;
 
@@ -163,24 +152,21 @@ int Test()
 	expectedOutput.result[5] = 1;
 
 	int error = changeBase(
-			input.originalValue,
-			input.newBase,
-			output.result,
-			&output.startIndex);
+			gInput.originalValue,
+			gInput.newBase,
+			gOutput.result,
+			&gOutput.startIndex);
 
 	if (error != 0) {
 		return -1;
 	}
 
-	if (expectedOutput.startIndex != output.startIndex)
-	{
+	if (expectedOutput.startIndex != gOutput.startIndex) {
 		return -1;
 	}
 
-	for (int i=0; i<6; i++)
-	{
-		if (expectedOutput.result[i] != output.result[i])
-		{
+	for (int i = 0; i < 6; i++) {
+		if (expectedOutput.result[i] != gOutput.result[i]) {
 			return -1;
 		}
 	}
@@ -196,31 +182,28 @@ int Run(int argc, char *argv[])
 	}
 
 	error = changeBase(
-			input.originalValue,
-			input.newBase,
-			output.result,
-			&output.startIndex);
+			gInput.originalValue,
+			gInput.newBase,
+			gOutput.result,
+			&gOutput.startIndex);
 
 	if (error != 0) {
 		return error;
 	}
 
-	printOutput(output.startIndex, output.result);
+	printOutput(gOutput.startIndex, gOutput.result);
 
 	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-	if (Test() == 0)
-	{
-		printf("PASSED\n");
-	}
-	else
-	{
-		printf("FAILED\n");
-	}
-	return 0;
+//	if (Test() == 0) {
+//		printf("PASSED\n");
+//	} else {
+//		printf("FAILED\n");
+//	}
+//	return 0;
 
-	//return Run(argc, argv);
+	return Run(argc, argv);
 }
