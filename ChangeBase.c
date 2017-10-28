@@ -6,8 +6,8 @@
 #define NOT_A_NUMBER        		1
 #define FAILED_TO_READ_INPUT        2
 #define TOO_FEW_ARGS_IN_INPUT       3
-#define EXPECTED_ARG_COUNT			4
 
+#define EXPECTED_ARG_COUNT			3
 
 #define MAX_DIGITS_IN_ORIGINAL_NUMBER 	6
 
@@ -137,7 +137,8 @@ int parseInputString(char* inputString, char* argv[EXPECTED_ARG_COUNT])
 {
 	argv[0] = inputString;
 
-	char* ptr = inputString;	int argIndex = 1;
+	char* ptr = inputString;
+	int argIndex = 1;
 
 	while (*ptr != 0)
 	{
@@ -183,16 +184,13 @@ int readInput()
 
 	char* argv[EXPECTED_ARG_COUNT];
 	int error = parseInputString(inputString, argv);
-	if (error != OK)
-	{
-		return error;
+	if (error == OK) {
+		error = readArguments(argv);
 	}
-
-	readArguments(argv);
 
 	free(inputString);
 
-	return OK;
+	return error;
 }
 
 void printOutput(int startIndex, int *result)
