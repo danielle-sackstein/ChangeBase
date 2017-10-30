@@ -2,14 +2,20 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define OK                  		0
-#define NOT_A_NUMBER        		1
-#define FAILED_TO_READ_INPUT        2
-#define TOO_FEW_ARGS_IN_INPUT       3
+/* internal errors */
 
-#define EXPECTED_ARG_COUNT			3
+#define OK                              0
+#define NOT_A_NUMBER                    1
+#define FAILED_TO_READ_INPUT            2
 
-#define MAX_DIGITS_IN_ORIGINAL_NUMBER 	6
+
+#define EXPECTED_ARG_COUNT              3
+#define MAX_DIGITS_IN_ORIGINAL_NUMBER   6
+#define MAX_DIGITS_IN_BASE              2
+#define MAX_CHARS_IN_INPUT            \
+            MAX_DIGITS_IN_BASE + 1 + \
+            MAX_DIGITS_IN_BASE + 1 + \
+            MAX_DIGITS_IN_ORIGINAL_NUMBER + 1
 
 struct Input
 {
@@ -26,18 +32,19 @@ struct Output
 struct Input gInput;
 struct Output gOutput;
 
-int parseInteger(char *str, int length, int base, int *pResult)
+int parseInteger(char *str, int base, int *pResult)
 {
-	/*we are assuming that the length of the number must be positive*/
-
 	*pResult = 0;
 
+	size_t length = strlen (str);
 	int power = 1;
 
 	char *ptr = str + length - 1;
 
-	for (int i = 0; i < length; i++) {
+	for (size_t i = 0; i < length; i++) {
+
 		int digit = *ptr - '0';
+
 		if ((digit < 0) || (digit > (base - 1))) {
 			return NOT_A_NUMBER;
 		}
@@ -46,151 +53,65 @@ int parseInteger(char *str, int length, int base, int *pResult)
 		power *= base;
 		ptr--;
 	}
-
 	return OK;
 }
 
-int changeBase(int value, int base, int result[6], int *pStartIndex)
+// 932 / 4 : 233 0
+// 233 / 4 : 58  1
+// 58 / 4  : 14  2
+// 14 / 4  : 3   2
+// 3 / 4   : 0   3
+
+void getDigitsInNewBase(int value, int base, int *result, int *pStartIndex)
 {
-	for (int i = 0; i < MAX_DIGITS_IN_ORIGINAL_NUMBER; i++) {
-		result[i] = 0;
-	}
-	*pStartIndex = MAX_DIGITS_IN_ORIGINAL_NUMBER-1;
+	int startIndex = MAX_DIGITS_IN_ORIGINAL_NUMBER;
 
-	int smallestPowerAbove = 1;
-	int power = 0;
-
-	for (power = 0; power < MAX_DIGITS_IN_ORIGINAL_NUMBER; power++) {
-		if (smallestPowerAbove > value) {
-			break;
-		}
-		smallestPowerAbove *= base;
+	for (int ratio = value; ratio > 0; startIndex--) {
+		result[startIndex - 1] = ratio % base;
+		ratio /= base;
 	}
 
-	if (power == MAX_DIGITS_IN_ORIGINAL_NUMBER+1) {
-		return -1;
-	}
-
-	if (power == 0) {
-		return 0;
-	}
-
-	power--;
-
-	int smallestPowerBelow = smallestPowerAbove / base;
-	int remain = value;
-	int place = MAX_DIGITS_IN_ORIGINAL_NUMBER-1 - power;
-	*pStartIndex = place;
-
-	while (place < MAX_DIGITS_IN_ORIGINAL_NUMBER) {
-		int digit = remain / smallestPowerBelow;
-		result[place] = digit;
-
-		remain = remain % smallestPowerBelow;
-		smallestPowerBelow /= base;
-		place++;
-	}
-
-	return OK;
+	*pStartIndex = startIndex;
 }
 
-int getIntegerArgument(char *str, int base, int *pResult)
+int parseArguments(char **argv)
 {
-	*pResult = 0;
+	int originalBase = 10;
 
-	int length = strlen(str);
-
-	int error = parseInteger(str, length, base, pResult);
-
-	/*we are assuming that the length of the number must be positive*/
-	if (error == NOT_A_NUMBER) {
-		fprintf(stderr, "invalid!!\n");
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
-}
-
-int readArguments(char **argv)
-{
-	int originalBase = 0;
-
-	int error = getIntegerArgument(argv[0], 10, &originalBase);
-	if (error != 0) {
+	int error = parseInteger(argv[0], 10, &originalBase);
+	if (error != OK) {
 		return error;
 	}
 
-	error = getIntegerArgument(argv[1], 10, &gInput.newBase);
-	if (error != 0) {
+	error = parseInteger(argv[1], 10, &gInput.newBase);
+	if (error != OK) {
 		return error;
 	}
 
-	error = getIntegerArgument(argv[2], originalBase, &gInput.originalValue);
-	if (error != 0) {
-		return error;
-	}
-
-	return 0;
+	return parseInteger(argv[2], originalBase, &gInput.originalValue);
 }
 
-int parseInputString(char* inputString, char* argv[EXPECTED_ARG_COUNT])
+void parseInputString(char *inputString, char *argv[EXPECTED_ARG_COUNT])
 {
-	argv[0] = inputString;
+	char delimiters[] = " \n";
 
-	char* ptr = inputString;
-	int argIndex = 1;
-
-	while (*ptr != 0)
-	{
-		if (*ptr == ' ')
-		{
-			*ptr = 0; // mark the end of the previous argument with null
-
-			// this argument should point to the char after the space
-
-			argv[argIndex] = ptr + 1;
-			argIndex++;
-			if (argIndex == EXPECTED_ARG_COUNT)
-			{
-				break;
-			}
-		}
-		ptr++;
-	}
-
-	if (argIndex < EXPECTED_ARG_COUNT){
-		return TOO_FEW_ARGS_IN_INPUT;
-	}
-
-	return OK;
+	argv[0] = strtok(inputString, delimiters);
+	argv[1] = strtok(0, delimiters);
+	argv[2] = strtok(0, delimiters);
 }
 
-int readInput()
+int readInputArgs(char **argv)
 {
-	// see https://linux.die.net/man//3/getline for the usage of getline()
+	char inputString[MAX_CHARS_IN_INPUT];
 
-	char *inputString = 0;
-	size_t size = 0;
-
-	ssize_t length = getline(&inputString, &size, stdin);
-	if (length == -1)
-	{
+	char *str = fgets(inputString, MAX_CHARS_IN_INPUT, stdin);
+	if (str == 0) {
 		return FAILED_TO_READ_INPUT;
 	}
 
-	// Replace the terminating '\n' with a null to make this a kosher string
+	parseInputString(inputString, argv);
 
-	inputString[length-1] = 0;
-
-	char* argv[EXPECTED_ARG_COUNT];
-	int error = parseInputString(inputString, argv);
-	if (error == OK) {
-		error = readArguments(argv);
-	}
-
-	free(inputString);
-
-	return error;
+	return OK;
 }
 
 void printOutput(int startIndex, int *result)
@@ -198,79 +119,31 @@ void printOutput(int startIndex, int *result)
 	for (int i = startIndex; i < 6; i++) {
 		printf("%d", result[i]);
 	}
-
 	printf("\n");
-}
-
-int Test()
-{
-	gInput.newBase = 2;
-	gInput.originalValue = 63;
-
-	struct Output expectedOutput;
-
-	expectedOutput.startIndex = 0;
-	expectedOutput.result[0] = 1;
-	expectedOutput.result[1] = 1;
-	expectedOutput.result[2] = 1;
-	expectedOutput.result[3] = 1;
-	expectedOutput.result[4] = 1;
-	expectedOutput.result[5] = 1;
-
-	int error = changeBase(
-			gInput.originalValue,
-			gInput.newBase,
-			gOutput.result,
-			&gOutput.startIndex);
-
-	if (error != 0) {
-		return -1;
-	}
-
-	if (expectedOutput.startIndex != gOutput.startIndex) {
-		return -1;
-	}
-
-	for (int i = 0; i < 6; i++) {
-		if (expectedOutput.result[i] != gOutput.result[i]) {
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-int Run(int argc, char *argv[])
-{
-//	int error = readArguments(argv + 1);
-	int error = readInput();
-	if (error != 0) {
-		return error;
-	}
-
-	error = changeBase(
-			gInput.originalValue,
-			gInput.newBase,
-			gOutput.result,
-			&gOutput.startIndex);
-
-	if (error != 0) {
-		return error;
-	}
-
-	printOutput(gOutput.startIndex, gOutput.result);
-
-	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-//	if (Test() == 0) {
-//		printf("PASSED\n");
-//	} else {
-//		printf("FAILED\n");
-//	}
-//	return 0;
+	char *inputArgs[EXPECTED_ARG_COUNT];
 
-	return Run(argc, argv);
+	int error = readInputArgs(inputArgs);
+	if (error != OK) {
+		printf("Failed to read input");
+		return EXIT_FAILURE;
+	}
+
+	error = parseArguments(inputArgs);
+	if (error != OK) {
+		fprintf(stderr, "invalid!!\n");
+		return EXIT_FAILURE;
+	}
+
+	getDigitsInNewBase(gInput.originalValue,
+					   gInput.newBase,
+					   gOutput.result,
+					   &gOutput.startIndex);
+
+	printOutput(gOutput.startIndex, gOutput.result);
+
+	return EXIT_SUCCESS;
 }
