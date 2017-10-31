@@ -26,7 +26,7 @@ struct Input
 struct Output
 {
 	int startIndex;
-	int result[MAX_DIGITS_IN_ORIGINAL_NUMBER];
+	long double result[MAX_DIGITS_IN_ORIGINAL_NUMBER];
 };
 
 struct Input gInput;
@@ -62,7 +62,7 @@ int parseInteger(char *str, int base, int *pResult)
 // 14 / 4  : 3   2
 // 3 / 4   : 0   3
 
-void getDigitsInNewBase(int value, int base, int *result, int *pStartIndex)
+void getDigitsInNewBase(int value, int base, long double *result, int *pStartIndex)
 {
 	int startIndex = MAX_DIGITS_IN_ORIGINAL_NUMBER;
 
@@ -91,6 +91,11 @@ int parseArguments(char **argv)
 	return parseInteger(argv[2], originalBase, &gInput.originalValue);
 }
 
+/**
+ * Parses the input string. Separates the numbers by " " by replacing it with Null.
+ * @param inputString  pointer to char
+ * @param argv
+ */
 void parseInputString(char *inputString, char *argv[EXPECTED_ARG_COUNT])
 {
 	char delimiters[] = " \n";
@@ -100,6 +105,12 @@ void parseInputString(char *inputString, char *argv[EXPECTED_ARG_COUNT])
 	argv[2] = strtok(0, delimiters);
 }
 
+/**
+ *  This method receives an input from the user. A valid input is:
+ *  base, " ", base, " ", number.
+ * @param argv a pointer to an array of chars
+ * @return 0 if the program did not fail, and 1 otherwise.
+ */
 int readInputArgs(char **argv)
 {
 	char inputString[MAX_CHARS_IN_INPUT];
@@ -114,14 +125,21 @@ int readInputArgs(char **argv)
 	return OK;
 }
 
-void printOutput(int startIndex, int *result)
+void printOutput(int startIndex, long double *result)
 {
 	for (int i = startIndex; i < 6; i++) {
-		printf("%d", result[i]);
+		printf("%llu", (unsigned long long)result[i]);
 	}
 	printf("\n");
 }
 
+/**
+ * This is the main method of the program. It receives an input from the user:
+ * An original base, a number and a new base.
+ * @param argc the number of arguments
+ * @param argv the users arguments.
+ * @return true if the program did not fail, false otherwise.
+ */
 int main(int argc, char *argv[])
 {
 	char *inputArgs[EXPECTED_ARG_COUNT];
