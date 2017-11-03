@@ -24,6 +24,13 @@
             MAX_DIGITS_IN_BASE + 1 +         \
             MAX_DIGITS_IN_ORIGINAL_NUMBER + 1)
 
+/**
+ * Receives a string and turns it to a number in a specific base.
+ * @param str the original string (a string of a number)
+ * @param base the base which we want to represent the number with
+ * @param pResult the number represented in the new base.
+ * @return 0 if the program did not fail, and 1 otherwise.
+ */
 int parseInteger(char *str, int base, int *pResult)
 {
 	*pResult = 0;
@@ -54,6 +61,13 @@ int parseInteger(char *str, int base, int *pResult)
 // 14 / 4  : 3   2
 // 3 / 4   : 0   3
 
+/**
+ * This method creates a new number represented by the new base.
+ * @param value the original number (represented by the original base).
+ * @param base the new base
+ * @param result the new number
+ * @param pStartIndex a pointer which points to the 1th digit.
+ */
 void getDigitsInNewBase(
 	int value,
 	int base,
@@ -70,6 +84,11 @@ void getDigitsInNewBase(
 	*pStartIndex = startIndex;
 }
 
+/**
+ * Parses the arguments by parsing each integer.
+ * @param argv a pointer to an array of chars
+ * @return 0 if the program did not fail, and 1 otherwise.
+ */
 int parseArguments(
 	char *argv[EXPECTED_ARG_COUNT],
 	int* pNewBase,
@@ -126,6 +145,11 @@ int readInputArgs(
 	return OK;
 }
 
+/**
+ * Prints the new number.
+ * @param startIndex the index to start from
+ * @param result the new number
+ */
 void printOutput(int startIndex, int *result)
 {
 	for (int i = startIndex; i < MAX_DIGITS_IN_NEW_NUMBER; i++) {
