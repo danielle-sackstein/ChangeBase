@@ -62,7 +62,7 @@ void getDigitsInNewBase(
 {
 	int startIndex = MAX_DIGITS_IN_NEW_NUMBER;
 
-	for (int ratio = value; ratio > 0; startIndex--) {
+	for (int ratio = value; ratio > 0 && startIndex > 0; startIndex--) {
 		result[startIndex - 1] = ratio % base;
 		ratio /= base;
 	}
