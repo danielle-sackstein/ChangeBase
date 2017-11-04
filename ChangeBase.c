@@ -1,3 +1,23 @@
+/**
+ * question 3
+ * When reading a value from a string according to a given base I used parseIntegerByBase.
+ * When converting a value to a string using a given base I used convertToStringByBase.
+ *
+ * parseInteger:
+ * 	In this method I accumulate the value of each digit
+ * 	from the last integer to the first, multiplying each one first by the correct power of the
+ * 	base.
+ * 	If the number is n, the complexity is log(n) (because we iterate for each digit).
+ * 	It is o(n) where n is the number of digits, but it is log (n) in the value of the number
+ *
+ *
+ * convertToStringByBase
+ *	In this method I calculate the digits from the least significant to the most significant as the
+ *	remainder of a value which starts as the number is is divided by the base in each iteration
+ *	If the number is n, the complexity is log(n) (because we iterate for each digit).
+ * 	It is o(n) where n is the number of digits, but it is log (n) in the value of the number
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,10 +37,10 @@
  * and 999999 in base 2 requires 20 digits
  * (1024 * 1024 is equal to 20 1's in base 2)
 */
-#define MAX_DIGITS_IN_NEW_NUMBER   		20
+#define MAX_DIGITS_IN_NEW_NUMBER        20
 #define MAX_DIGITS_IN_BASE              2
 #define MAX_CHARS_IN_INPUT                   \
-			(MAX_DIGITS_IN_BASE + 1 +        \
+            (MAX_DIGITS_IN_BASE + 1 +        \
             MAX_DIGITS_IN_BASE + 1 +         \
             MAX_DIGITS_IN_ORIGINAL_NUMBER + 1)
 
@@ -31,28 +51,27 @@
  * @param pResult the number represented in the new base.
  * @return 0 if the program did not fail, and 1 otherwise.
  */
-int parseInteger(char *str, int base, int *pResult)
-{
-	*pResult = 0;
+int parseIntegerByBase(char *str, int base, int *pResult) {
+    *pResult = 0;
 
-	size_t length = strlen (str);
-	int power = 1;
+    size_t length = strlen(str);
+    int power = 1;
 
-	char *ptr = str + length - 1;
+    char *ptr = str + length - 1;
 
-	for (size_t i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
 
-		int digit = *ptr - '0';
+        int digit = *ptr - '0';
 
-		if ((digit < 0) || (digit > (base - 1))) {
-			return NOT_A_NUMBER;
-		}
+        if ((digit < 0) || (digit > (base - 1))) {
+            return NOT_A_NUMBER;
+        }
 
-		*pResult += power * digit;
-		power *= base;
-		ptr--;
-	}
-	return OK;
+        *pResult += power * digit;
+        power *= base;
+        ptr--;
+    }
+    return OK;
 }
 
 // 932 / 4 : 233 0
@@ -62,26 +81,27 @@ int parseInteger(char *str, int base, int *pResult)
 // 3 / 4   : 0   3
 
 /**
- * This method creates a new number represented by the new base.
- * @param value the original number (represented by the original base).
- * @param base the new base
- * @param result the new number
- * @param pStartIndex a pointer which points to the 1th digit.
+ * This method creates a string representation of a number according to a given base.
+ * @param value the number
+ * @param base the base that should be used to create the string represenation
+ * @param outputString is a string which will contain the result.
+ * @return a point to one of the characters in the outputString
+ * This pointer points to the first character in the string representation.
+ * A 0 is placed in the last character of outputString so the return value points to a valid string
  */
-void getDigitsInNewBase(
-	int value,
-	int base,
-	int result[MAX_DIGITS_IN_NEW_NUMBER],
-	int *pStartIndex)
-{
-	int startIndex = MAX_DIGITS_IN_NEW_NUMBER;
+char *convertToStringByBase(
+        int value,
+        int base,
+        char outputString[MAX_DIGITS_IN_NEW_NUMBER + 1]) {
+    int startIndex = MAX_DIGITS_IN_NEW_NUMBER;
+    outputString[startIndex] = 0;
 
-	for (int ratio = value; ratio > 0 && startIndex > 0; startIndex--) {
-		result[startIndex - 1] = ratio % base;
-		ratio /= base;
-	}
+    for (int ratio = value; ratio > 0 && startIndex > 0; startIndex--) {
+        outputString[startIndex - 1] = '0' + ratio % base;
+        ratio /= base;
+    }
 
-	*pStartIndex = startIndex;
+    return outputString + startIndex;
 }
 
 /**
@@ -90,23 +110,22 @@ void getDigitsInNewBase(
  * @return 0 if the program did not fail, and 1 otherwise.
  */
 int parseArguments(
-	char *argv[EXPECTED_ARG_COUNT],
-	int* pNewBase,
-	int* pOriginalValue)
-{
-	int originalBase = 10;
+        char *argv[EXPECTED_ARG_COUNT],
+        int *pNewBase,
+        int *pOriginalValue) {
+    int originalBase = 10;
 
-	int error = parseInteger(argv[0], 10, &originalBase);
-	if (error != OK) {
-		return error;
-	}
+    int error = parseIntegerByBase(argv[0], originalBase, &originalBase);
+    if (error != OK) {
+        return error;
+    }
 
-	error = parseInteger(argv[1], 10, pNewBase);
-	if (error != OK) {
-		return error;
-	}
+    error = parseIntegerByBase(argv[1], originalBase, pNewBase);
+    if (error != OK) {
+        return error;
+    }
 
-	return parseInteger(argv[2], originalBase, pOriginalValue);
+    return parseIntegerByBase(argv[2], originalBase, pOriginalValue);
 }
 
 /**
@@ -115,14 +134,13 @@ int parseArguments(
  * @param argv
  */
 void parseInputString(
-	char inputString[MAX_CHARS_IN_INPUT],
-	char *argv[EXPECTED_ARG_COUNT])
-{
-	char delimiters[] = " \n";
+        char inputString[MAX_CHARS_IN_INPUT],
+        char *argv[EXPECTED_ARG_COUNT]) {
+    char delimiters[] = " \n";
 
-	argv[0] = strtok(inputString, delimiters);
-	argv[1] = strtok(0, delimiters);
-	argv[2] = strtok(0, delimiters);
+    argv[0] = strtok(inputString, delimiters);
+    argv[1] = strtok(0, delimiters);
+    argv[2] = strtok(0, delimiters);
 }
 
 /**
@@ -132,30 +150,16 @@ void parseInputString(
  * @return 0 if the program did not fail, and 1 otherwise.
  */
 int readInputArgs(
-	char inputString[MAX_CHARS_IN_INPUT],
-	char *argv[EXPECTED_ARG_COUNT])
-{
-	char *str = fgets(inputString, MAX_CHARS_IN_INPUT, stdin);
-	if (str == 0) {
-		return FAILED_TO_READ_INPUT;
-	}
+        char inputString[MAX_CHARS_IN_INPUT],
+        char *argv[EXPECTED_ARG_COUNT]) {
+    char *str = fgets(inputString, MAX_CHARS_IN_INPUT, stdin);
+    if (str == 0) {
+        return FAILED_TO_READ_INPUT;
+    }
 
-	parseInputString(inputString, argv);
+    parseInputString(inputString, argv);
 
-	return OK;
-}
-
-/**
- * Prints the new number.
- * @param startIndex the index to start from
- * @param result the new number
- */
-void printOutput(int startIndex, int *result)
-{
-	for (int i = startIndex; i < MAX_DIGITS_IN_NEW_NUMBER; i++) {
-		printf("%d", result[i]);
-	}
-	printf("\n");
+    return OK;
 }
 
 /**
@@ -165,35 +169,32 @@ void printOutput(int startIndex, int *result)
  * @param argv the users arguments.
  * @return true if the program did not fail, false otherwise.
  */
-int main(int argc, char *argv[])
-{
-	char *inputArgs[EXPECTED_ARG_COUNT];
-	char inputString[MAX_CHARS_IN_INPUT];
+int main() {
+    char *inputArgs[EXPECTED_ARG_COUNT];
+    char inputString[MAX_CHARS_IN_INPUT];
 
-	int error = readInputArgs(inputString, inputArgs);
-	if (error != OK) {
-		printf("Failed to read input");
-		return EXIT_FAILURE;
-	}
+    int error = readInputArgs(inputString, inputArgs);
+    if (error != OK) {
+        printf("Failed to read input");
+        return EXIT_FAILURE;
+    }
 
-	int newBase;
-	int originalValue;
+    int newBase;
+    int originalValue;
 
-	error = parseArguments(inputArgs, &newBase, &originalValue);
-	if (error != OK) {
-		fprintf(stderr, "invalid!!\n");
-		return EXIT_FAILURE;
-	}
+    error = parseArguments(inputArgs, &newBase, &originalValue);
+    if (error != OK) {
+        fprintf(stderr, "invalid!!\n");
+        return EXIT_FAILURE;
+    }
 
-	int startIndex;
-	int result[MAX_DIGITS_IN_NEW_NUMBER];
+    char outputString[MAX_DIGITS_IN_NEW_NUMBER + 1];
 
-	getDigitsInNewBase(originalValue,
-					   newBase,
-					   result,
-					   &startIndex);
+    char *result = convertToStringByBase(originalValue,
+                                         newBase,
+                                         outputString);
 
-	printOutput(startIndex, result);
+    printf("%s\n", result);
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
